@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Qr Scanner | bip-zip</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  </head>
+  <body>
+
+
+    <div class="container-fluid px-0 mx-0 ">
+      <div class="container col-lg-9 py-2  mb-2 mt-5 pt-5">
+       <div style="cursor: -webkit-grab; cursor: grab;">
+        <h3 class="text-center mb-3">QR Scan</h3>
+        <div style="margin: auto" class="text-center">
+         
+            <canvas id="myCanvas" hidden ></canvas>
+            <video autoplay="true" class="p-2 border border-lg" id="videoElement"> </video>
+    
+            <img id="my-data-uri" src=""  class="img-fluid p-2 ">
+            <p class="mt-3">
+             
+              <button class="mt-2 px-4 me-2 btn btn-primary" id="cap" onclick="getCurrentFrame();">Capture</button>
+              <button class="mt-2 px-4 me-5 btn btn-primary" id="recap" style="display: none;" onclick="recapture();">Re-capture</button>
+              <button class="mt-2 ms-5 px-3 me-2 btn btn-success" id="done" style="display: none;" onclick="postData();">Done</button>
+    
+              <form id="myForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+    
+                <input type="text" id="myImageInput" name="image" hidden>
+              </form>
+              
+            </p>
+            <p class="fw-light" id="helpcap">Lifehack: click anywhere inside the screen to capture the image.</p>
+      </div>
+       </div>
+      </div>
+    </div>
+    <!-- the javascript contents -->
+    <script>
+        var canvas
+var ctx
+var video;
+var webcamWidth;
+var webcamHeight;
+var beforeCapture = true;
+
+navigator.getUserMedia = (
+  navigator.getUserMedia ||
+  navigator.webkitGetUserMedia ||
+  navigator.mozGetUserMedia ||
+  navigator.msGetUserMedia
+);
+
+video = document.querySelector("#videoElement");
+canvas = document.getElementById("myCanvas")
+ctx = canvas.getContext('2d')
+
+function camera(){
+  if (navigator.mediaDevices.getUserMedia) {
+    let constraints = { 
+      audio: false, 
+      video: {
+        width: { min: 400, ideal: 400, max: 400 },
+        height: { min: 400, ideal: 400, max: 400 },
+    }
+      
+  };
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function (stream) {
+          video.srcObject = stream;
+          webcamWidth = stream.getVideoTracks()[0].getSettings().width
+          webcamHeight = stream.getVideoTracks()[0].getSettings().height
+          canvas.setAttribute('width', 400);
+          canvas.setAttribute('height', 400);
+        })
+        .catch(function (error) {
+          console.log(error,"Something went wrong!");
+        });
+    }
+}
+
+function getCurrentFrame() {
+  beforeCapture = false;
+  ctx.drawImage(video, 0,0)
+  img_dataURI = canvas.toDataURL('image/png')
+  video.style.display = "none";
+  var image= document.getElementById("my-data-uri")
+  image.src = img_dataURI;
+  image.classList.add("border")
+
+  document.getElementById("cap").style.display='none';
+  document.getElementById("done").style.display='inline';
+  document.getElementById("recap").style.display='inline';
+  document.getElementById("helpcap").style.display='none';
+}
+
+function recapture(){
+  location.reload();
+}
+
+function postData(){
+  
+    var form = document.getElementById("myForm");
+    var imageInput = document.getElementById("myImageInput");
+  imageInput.value = canvas.toDataURL('image/png')
+  form.submit();
+}
+
+camera();
+document.addEventListener('click', () => {if(beforeCapture){getCurrentFrame();}else{return};});
+
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+  </body>
+</html>
